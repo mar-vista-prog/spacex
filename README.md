@@ -35,13 +35,13 @@ The system supports:
 
 - `OnGround` (default)
 - `InSpace`
-- `InRepair` (triggers mission status to `PENDING`)
+- `InRepair` (triggers mission status to `Pending`)
 - `InBuild` (for non-human builds, included as an edge case)
 
 ### Mission statuses:
 
 - `Scheduled` – no rockets assigned
-- `Pending` – at least one assigned rocket is `IN_REPAIR`
+- `Pending` – at least one assigned rocket is `InRepair`
 - `InProgress` – at least one rocket assigned, none are in repair
 - `Ended` – mission completed, no further rocket assignments allowed
 
@@ -58,7 +58,10 @@ The system supports:
 
 ## 🚀 How to Run
 
-1. Compile the project:
+Compile the project:
 
-```bash
 mvn clean compile
+
+Generate jar in the target folder:
+
+mvn clean package

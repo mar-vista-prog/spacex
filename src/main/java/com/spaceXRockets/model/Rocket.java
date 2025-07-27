@@ -1,8 +1,8 @@
 package com.spaceXRockets.model;
 
-import com.spaceXRockets.api.RocketStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.util.Comparator;
@@ -17,10 +17,12 @@ public class Rocket {
                     .comparing(Rocket::getStatus, Comparator.reverseOrder())
                     .thenComparing(Rocket::getName);
 
-    @Builder.Default
-    private final String name = "";
+    @NonNull
+    @Setter
+    private final String name;
 
     @Builder.Default
+    @NonNull
     private RocketStatus status = RocketStatus.OnGround;
 
     private Mission mission;

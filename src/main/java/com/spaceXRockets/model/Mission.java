@@ -1,8 +1,8 @@
 package com.spaceXRockets.model;
 
-import com.spaceXRockets.api.MissionStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.util.Collections;
@@ -14,11 +14,13 @@ import java.util.stream.Collectors;
 @Builder
 public class Mission {
 
-    @Builder.Default
-    private final String name = "";
+    @NonNull
+    @Setter
+    private final String name;
 
     @Builder.Default
     @Setter
+    @NonNull
     private MissionStatus status = MissionStatus.Scheduled;
 
     @Builder.Default

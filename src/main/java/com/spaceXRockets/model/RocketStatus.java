@@ -1,4 +1,4 @@
-package com.spaceXRockets.api;
+package com.spaceXRockets.model;
 
 public enum RocketStatus {
     OnGround("On ground"),

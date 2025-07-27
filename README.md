@@ -8,7 +8,7 @@ Chat GPT was used for refactoring and adding tests
 ✅ Clean Code  
 ✅ SOLID Principles  
 ✅ TDD (Test-Driven Development)  
-✅ No frameworks, no databases, no REST APIs — just pure Java
+✅ No frameworks, no databases, no REST APIs — just pure Java  
 ✅ Based on NOT thread-safe collections, not transactional
 
 ---

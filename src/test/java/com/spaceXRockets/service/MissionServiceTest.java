@@ -149,6 +149,72 @@ class MissionServiceTest {
                 "• Double Landing - Ended - Dragons: 0\r\n", result);
     }
 
+    @Test
+    void testAssignRocketAlreadyAssignedToMission_shouldDoNothing() {
+        Mission m1 = createMission("Alpha");
+        Mission m2 = createMission("Beta");
+        Rocket rocket = createRocket("Reusable");
+
+        addMission(m1);
+        addMission(m2);
+        addRocket(rocket);
+        assignRocketToMission(rocket, m1);
+
+        missionService.assignRocketToMission(rocket, m2); // should not reassign
+
+        assertEquals(1, m1.getRockets().size());
+        assertEquals(0, m2.getRockets().size());
+        assertEquals(m1, rocket.getMission());
+    }
+
+    @Test
+    void testAssignRocketToEndedMission_shouldDoNothing() {
+        Mission endedMission = createMission("Terminated");
+        endedMission.setStatus(MissionStatus.Ended);
+        Rocket rocket = createRocket("Archived");
+
+        addMission(endedMission);
+        addRocket(rocket);
+        assignRocketToMission(rocket, endedMission);
+
+        assertEquals(0, endedMission.getRockets().size());
+        assertNull(rocket.getMission());
+    }
+
+    @Test
+    void testAddNullRocketToMission_shouldNotThrow() {
+        Mission mission = createMission("NullSafe");
+        addMission(mission);
+
+        // should not throw
+        mission.addRocket(null);
+
+        assertEquals(0, mission.getRockets().size());
+    }
+
+    @Test
+    void testChangeRocketStatusWithoutMission_shouldNotThrow() {
+        Rocket rocket = createRocket("Independent");
+        addRocket(rocket);
+
+        // should not throw or affect any mission
+        missionService.changeRocketStatus(rocket, RocketStatus.InRepair);
+
+        assertEquals(RocketStatus.InRepair, rocket.getStatus());
+    }
+
+    @Test
+    void testChangeMissionStatusWithNoRockets_shouldSetStatus() {
+        Mission mission = createMission("EmptyMission");
+        addMission(mission);
+
+        missionService.changeMissionStatus(mission, MissionStatus.Ended);
+
+        assertEquals(MissionStatus.Ended, mission.getStatus());
+        assertTrue(mission.getRockets().isEmpty());
+    }
+
+
     private Mission createMission(String name) {
         return Mission.builder().name(name).build();
     }

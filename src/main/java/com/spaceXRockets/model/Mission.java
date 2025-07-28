@@ -6,16 +6,15 @@ import lombok.NonNull;
 import lombok.Setter;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Builder
 public class Mission {
 
     @NonNull
-    @Setter
     private final String name;
 
     @Builder.Default
@@ -24,7 +23,7 @@ public class Mission {
     private MissionStatus status = MissionStatus.Scheduled;
 
     @Builder.Default
-    private final Set<Rocket> rockets = new HashSet<>();
+    private final Set<Rocket> rockets = new LinkedHashSet<>();
 
     public void addRocket(Rocket rocket) {
         if (rocket != null) {
@@ -37,15 +36,10 @@ public class Mission {
     }
 
     public Set<Rocket> getRockets() {
-        return Collections.unmodifiableSet(rockets);
-    }
-
-    @Override
-    public String toString() {
-        return "• " + name + " - " + status + " - Dragons: " + rockets.size() + "\n" +
+        return Collections.unmodifiableSet(
                 rockets.stream()
-                        .sorted(Rocket.REVERSED_STATUS_NAME_COMPARATOR)
-                        .map(Rocket::toString)
-                        .collect(Collectors.joining());
+                        .sorted(Comparator.comparing(Rocket::getName))
+                        .collect(LinkedHashSet::new, Set::add, Set::addAll)
+        );
     }
 }

@@ -1,80 +1,79 @@
 package com.spaceXRockets.model;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MissionTest {
 
-    @Test
-    void builder_defaultsAreSetCorrectly() {
-        Mission mission = Mission.builder().name("m").build();
+    private Mission mission;
+    private Rocket rocket1;
+    private Rocket rocket2;
 
-        assertEquals("m", mission.getName());
-        assertEquals(MissionStatus.Scheduled, mission.getStatus());
-        assertNotNull(mission.getRockets());
-        assertTrue(mission.getRockets().isEmpty());
+    @BeforeEach
+    void setUp() {
+        mission = Mission.builder()
+                .name("TestMission")
+                .status(MissionStatus.Scheduled)
+                .build();
+
+        rocket1 = Rocket.builder().name("Dragon 1").build();
+        rocket2 = Rocket.builder().name("Dragon 2").build();
     }
 
     @Test
-    void addRocket_addsRocketToMission() {
-        Mission mission = Mission.builder().name("m").build();
-        Rocket rocket = Rocket.builder().name("Falcon").build();
-
-        mission.addRocket(rocket);
-
+    void addRocket_shouldAddRocketToSet() {
+        mission.addRocket(rocket1);
         assertEquals(1, mission.getRockets().size());
-        assertTrue(mission.getRockets().contains(rocket));
+        assertTrue(mission.getRockets().contains(rocket1));
     }
 
     @Test
-    void addRocket_doesNotAddNullRocket() {
-        Mission mission = Mission.builder().name("m").build();
-
+    void addRocket_shouldIgnoreNulls() {
         mission.addRocket(null);
-
         assertTrue(mission.getRockets().isEmpty());
     }
 
     @Test
-    void clearRockets_removesAllRockets() {
-        Rocket rocket = Rocket.builder().name("Dragon").build();
-        Set<Rocket> rockets = new HashSet<>();
-        rockets.add(rocket);
-        Mission mission = Mission.builder().name("m").rockets(rockets).build();
+    void addRocket_shouldNotDuplicateSameInstance() {
+        mission.addRocket(rocket1);
+        mission.addRocket(rocket1);
+        assertEquals(1, mission.getRockets().size());
+    }
 
+    @Test
+    void clearRockets_shouldEmptyTheSet() {
+        mission.addRocket(rocket1);
+        mission.addRocket(rocket2);
         mission.clearRockets();
 
         assertTrue(mission.getRockets().isEmpty());
     }
 
     @Test
-    void getRockets_returnsUnmodifiableSet() {
-        Rocket rocket = Rocket.builder().name("Red Dragon").build();
-        Mission mission = Mission.builder().name("m").rockets(Set.of(rocket)).build();
-
+    void getRockets_shouldReturnUnmodifiableSet() {
+        mission.addRocket(rocket1);
         Set<Rocket> rockets = mission.getRockets();
-
-        assertThrows(UnsupportedOperationException.class, () -> rockets.add(Rocket.builder().name("New").build()));
+        assertThrows(UnsupportedOperationException.class, () -> rockets.add(rocket2));
     }
 
     @Test
-    void toString_formatsMissionAndRockets() {
-        Rocket rocket1 = Rocket.builder().name("Alpha").status(RocketStatus.InSpace).build();
-        Rocket rocket2 = Rocket.builder().name("Beta").status(RocketStatus.OnGround).build();
-        Mission mission = Mission.builder()
-                .name("Mars Mission")
-                .status(MissionStatus.InProgress)
-                .rockets(Set.of(rocket1, rocket2))
-                .build();
+    void missionShouldHaveDefaultStatus() {
+        Mission m = Mission.builder().name("DefaultMission").build();
+        assertEquals(MissionStatus.Scheduled, m.getStatus());
+    }
 
-        String result = mission.toString();
+    @Test
+    void missionShouldAllowStatusUpdate() {
+        mission.setStatus(MissionStatus.InProgress);
+        assertEquals(MissionStatus.InProgress, mission.getStatus());
+    }
 
-        assertTrue(result.startsWith("• Mars Mission - InProgress - Dragons: 2"));
-        assertTrue(result.contains("Alpha"));
-        assertTrue(result.contains("Beta"));
+    @Test
+    void missionShouldRequireNonNullName() {
+        assertThrows(NullPointerException.class, () -> Mission.builder().name(null).build());
     }
 }

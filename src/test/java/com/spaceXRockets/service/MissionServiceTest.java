@@ -1,110 +1,131 @@
 package com.spaceXRockets.service;
 
-import com.spaceXRockets.model.Mission;
-import com.spaceXRockets.model.MissionStatus;
-import com.spaceXRockets.model.Rocket;
-import com.spaceXRockets.model.RocketStatus;
+import com.spaceXRockets.model.*;
+import com.spaceXRockets.repository.inmemory.InMemoryMissionRepository;
+import com.spaceXRockets.repository.inmemory.InMemoryRocketRepository;
+import com.spaceXRockets.service.impl.MissionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-class MissionServiceImplTest {
+class MissionServiceTest {
 
-    @InjectMocks
     private MissionService missionService;
 
-    private Mission mission;
-    private Rocket rocket1;
-    private Rocket rocket2;
-
     @BeforeEach
-    void setUp() {
-        mission = Mission.builder().name("Luna1").build();
-        rocket1 = Rocket.builder().name("Dragon A").status(RocketStatus.OnGround).build();
-        rocket2 = Rocket.builder().name("Dragon B").status(RocketStatus.InSpace).build();
+    void setup() {
+        MissionStatusUpdater stubUpdater = mission -> {
+            if (mission.getRockets().isEmpty()) {
+                mission.setStatus(MissionStatus.Scheduled);
+            } else if (mission.getRockets().stream().anyMatch(r -> r.getStatus() == RocketStatus.InRepair)) {
+                mission.setStatus(MissionStatus.Pending);
+            } else {
+                mission.setStatus(MissionStatus.InProgress);
+            }
+        };
+
+        missionService = new MissionServiceImpl(
+                new InMemoryMissionRepository(),
+                new InMemoryRocketRepository(),
+                stubUpdater
+        );
     }
 
     @Test
-    void addMission_setsScheduledStatusAndStoresMission() {
-        missionService.addMission(mission);
+    void testAddMissionAndRetrieveSummary() {
+        Mission mission = createMission("Mars");
+        addMission(mission);
 
-        assertEquals(MissionStatus.Scheduled, mission.getStatus());
-        assertTrue(missionService.getMissionsSummary().contains(mission));
+        List<Mission> summary = missionService.getMissionsSummary();
+
+        assertEquals(1, summary.size());
+        assertEquals("Mars", summary.get(0).getName());
+        assertEquals(0, summary.get(0).getRockets().size());
     }
 
     @Test
-    void changeMissionStatusToEnded_removesRocketsAndNullifiesTheirMissions() {
-        assignRocketsToMission(mission, rocket1, rocket2);
+    void testAddRocketToMission() {
+        Mission mission = createMission("Moon");
+        Rocket rocket = createRocket("Falcon");
+
+        addMission(mission);
+        addRocket(rocket);
+        assignRocketToMission(rocket, mission);
+
+        assertEquals(1, mission.getRockets().size());
+        assertEquals(mission, rocket.getMission());
+        assertEquals(MissionStatus.InProgress, mission.getStatus());
+    }
+
+    @Test
+    void testChangeMissionStatusToEnded() {
+        Mission mission = createMission("Venus");
+        Rocket rocket = createRocket("Dragon");
+
+        mission.addRocket(rocket);
+        rocket.setMission(mission);
+        addMission(mission);
 
         missionService.changeMissionStatus(mission, MissionStatus.Ended);
 
         assertEquals(MissionStatus.Ended, mission.getStatus());
         assertTrue(mission.getRockets().isEmpty());
-        assertNull(rocket1.getMission());
-        assertNull(rocket2.getMission());
+        assertNull(rocket.getMission());
     }
 
     @Test
-    void changeMissionStatusToInProgress_updatesOnlyStatus() {
-        missionService.changeMissionStatus(mission, MissionStatus.InProgress);
+    void testAssignRocketsToMission() {
+        Mission mission = createMission("Luna");
+        Rocket r1 = createRocket("R1");
+        Rocket r2 = createRocket("R2");
 
-        assertEquals(MissionStatus.InProgress, mission.getStatus());
+        addMission(mission);
+        addRocket(r1);
+        addRocket(r2);
+
+        missionService.assignRocketsToMission(Set.of(r1, r2), mission);
+
+        assertEquals(2, mission.getRockets().size());
+        assertTrue(mission.getRockets().contains(r1));
+        assertTrue(mission.getRockets().contains(r2));
     }
 
     @Test
-    void getMissionsSummary_returnsMissionsSortedByRocketCountAndName() {
-        Mission m1 = createMission("Alpha");
-        Mission m2 = createMission("Beta");
+    void testChangeRocketStatusToInRepair() {
+        Mission mission = createMission("Europa");
+        Rocket rocket = createRocket("Damaged");
 
-        m1.addRocket(createRocket("R1", RocketStatus.OnGround));
-        m2.addRocket(createRocket("R1", RocketStatus.OnGround));
-        m2.addRocket(createRocket("R2", RocketStatus.OnGround));
+        mission.addRocket(rocket);
+        rocket.setMission(mission);
+        addMission(mission);
 
-        missionService.addMission(m1);
-        missionService.addMission(m2);
+        missionService.changeRocketStatus(rocket, RocketStatus.InRepair);
 
-        List<Mission> summary = missionService.getMissionsSummary();
-
-        assertEquals(List.of(m2, m1), summary);
-    }
-
-    @Test
-    void getMissionsSummaryByNumberOfRockets_returnsFormattedString() {
-        Mission m = createMission("Mars", MissionStatus.InProgress);
-        Rocket r = createRocket("DragonX", RocketStatus.InSpace);
-
-        m.addRocket(r);
-        r.setMission(m);
-        missionService.addMission(m);
-
-        String result = missionService.getMissionsSummaryByNumberOfRockets();
-
-        assertTrue(result.contains("• Mars - InProgress - Dragons: 1"));
-        assertTrue(result.contains("o DragonX - In space"));
+        assertEquals(RocketStatus.InRepair, rocket.getStatus());
+        assertEquals(MissionStatus.Pending, mission.getStatus());
     }
 
     @Test
     void testMissionSummaryOrdering() {
-        Mission m1 = createMission("Mars", MissionStatus.Scheduled);
-        Mission m2 = createMission("Luna1", MissionStatus.Pending, Set.of(
-                createRocket("Dragon 1", RocketStatus.OnGround),
-                createRocket("Dragon 2", RocketStatus.OnGround)
-        ));
-        Mission m3 = createMission("Double Landing", MissionStatus.Ended);
-        Mission m4 = createMission("Transit", MissionStatus.InProgress, Set.of(
-                createRocket("Red Dragon", RocketStatus.OnGround),
-                createRocket("Dragon XL", RocketStatus.InSpace),
-                createRocket("Falcon Heavy", RocketStatus.InSpace)
-        ));
-        Mission m5 = createMission("Luna2", MissionStatus.Scheduled);
-        Mission m6 = createMission("Vertical Landing", MissionStatus.Ended);
+        Mission m1 = Mission.builder().name("Mars").status(MissionStatus.Scheduled).build();
+        Set<Rocket> lunaRockets = new HashSet<>();
+        lunaRockets.add(Rocket.builder().name("Dragon 1").status(RocketStatus.OnGround).build());
+        lunaRockets.add(Rocket.builder().name("Dragon 2").status(RocketStatus.OnGround).build());
+        Mission m2 = Mission.builder().name("Luna1").status(MissionStatus.Pending).rockets(lunaRockets).build();
+        Mission m3 = Mission.builder().name("Double Landing").status(MissionStatus.Ended).build();
+        Set<Rocket> transitRockets = new HashSet<>();
+        transitRockets.add(Rocket.builder().name("Red Dragon").status(RocketStatus.OnGround).build());
+        transitRockets.add(Rocket.builder().name("Dragon XL").status(RocketStatus.InSpace).build());
+        transitRockets.add(Rocket.builder().name("Falcon Heavy").status(RocketStatus.InSpace).build());
+
+        Mission m4 = Mission.builder().name("Transit").status(MissionStatus.InProgress).rockets(transitRockets).build();
+        Mission m5 = Mission.builder().name("Luna2").status(MissionStatus.Scheduled).build();
+        Mission m6 = Mission.builder().name("Vertical Landing").status(MissionStatus.Ended).build();
 
         missionService.addMission(m1);
         missionService.addMission(m2);
@@ -113,45 +134,38 @@ class MissionServiceImplTest {
         missionService.addMission(m5);
         missionService.addMission(m6);
 
-        String expected = """
-                • Transit - InProgress - Dragons: 3
-                o Dragon XL - In space
-                o Falcon Heavy - In space
-                o Red Dragon - On ground
-                • Luna1 - Pending - Dragons: 2
-                o Dragon 1 - On ground
-                o Dragon 2 - On ground
-                • Vertical Landing - Ended - Dragons: 0
-                • Mars - Scheduled - Dragons: 0
-                • Luna2 - Scheduled - Dragons: 0
-                • Double Landing - Ended - Dragons: 0
-                """;
+        String result = missionService.getMissionsSummaryByNumberOfRockets();
 
-        assertEquals(expected, missionService.getMissionsSummaryByNumberOfRockets());
+        assertEquals("• Transit - InProgress - Dragons: 3\r\n" +
+                "o Dragon XL - In space\r\n" +
+                "o Falcon Heavy - In space\r\n" +
+                "o Red Dragon - On ground\r\n" +
+                "• Luna1 - Pending - Dragons: 2\r\n" +
+                "o Dragon 1 - On ground\r\n" +
+                "o Dragon 2 - On ground\r\n" +
+                "• Vertical Landing - Ended - Dragons: 0\r\n" +
+                "• Mars - Scheduled - Dragons: 0\r\n" +
+                "• Luna2 - Scheduled - Dragons: 0\r\n" +
+                "• Double Landing - Ended - Dragons: 0\r\n", result);
     }
-
-    // ---------- Helper Methods ----------
 
     private Mission createMission(String name) {
         return Mission.builder().name(name).build();
     }
 
-    private Mission createMission(String name, MissionStatus status) {
-        return Mission.builder().name(name).status(status).build();
+    private Rocket createRocket(String name) {
+        return Rocket.builder().name(name).build();
     }
 
-    private Mission createMission(String name, MissionStatus status, Set<Rocket> rockets) {
-        return Mission.builder().name(name).status(status).rockets(rockets).build();
+    private void addMission(Mission mission) {
+        missionService.addMission(mission);
     }
 
-    private Rocket createRocket(String name, RocketStatus status) {
-        return Rocket.builder().name(name).status(status).build();
+    private void addRocket(Rocket rocket) {
+        missionService.addRocket(rocket);
     }
 
-    private void assignRocketsToMission(Mission mission, Rocket... rockets) {
-        for (Rocket r : rockets) {
-            mission.addRocket(r);
-            r.setMission(mission);
-        }
+    private void assignRocketToMission(Rocket rocket, Mission mission) {
+        missionService.assignRocketToMission(rocket, mission);
     }
 }

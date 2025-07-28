@@ -1,9 +1,9 @@
 package com.spaceXRockets.formatter;
 
 import com.spaceXRockets.model.Mission;
-import com.spaceXRockets.model.MissionStatus;
+import com.spaceXRockets.enums.MissionStatus;
 import com.spaceXRockets.model.Rocket;
-import com.spaceXRockets.model.RocketStatus;
+import com.spaceXRockets.enums.RocketStatus;
 import com.spaceXRockets.service.formatter.MissionFormatter;
 import org.junit.jupiter.api.Test;
 

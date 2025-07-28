@@ -1,9 +1,9 @@
 package com.spaceXRockets.service;
 
 import com.spaceXRockets.model.Mission;
-import com.spaceXRockets.model.MissionStatus;
+import com.spaceXRockets.enums.MissionStatus;
 import com.spaceXRockets.model.Rocket;
-import com.spaceXRockets.model.RocketStatus;
+import com.spaceXRockets.enums.RocketStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

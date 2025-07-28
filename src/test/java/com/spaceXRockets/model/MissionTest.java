@@ -1,5 +1,6 @@
 package com.spaceXRockets.model;
 
+import com.spaceXRockets.enums.MissionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

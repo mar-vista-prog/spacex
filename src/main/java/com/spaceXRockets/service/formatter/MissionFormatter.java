@@ -1,9 +1,11 @@
 package com.spaceXRockets.service.formatter;
 
 import com.spaceXRockets.model.Mission;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
 public class MissionFormatter {
 
     public static String format(Mission mission) {

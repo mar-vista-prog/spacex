@@ -1,8 +1,12 @@
 package com.spaceXRockets.service.impl;
 
+import com.spaceXRockets.enums.RocketStatus;
 import com.spaceXRockets.model.*;
+import com.spaceXRockets.enums.MissionStatus;
 import com.spaceXRockets.service.MissionStatusUpdater;
+import org.springframework.stereotype.Service;
 
+@Service
 public class MissionStatusUpdaterImpl implements MissionStatusUpdater {
 
     public void update(Mission mission) {

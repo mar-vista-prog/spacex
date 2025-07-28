@@ -1,15 +1,18 @@
 package com.spaceXRockets.model;
 
+import com.spaceXRockets.enums.MissionStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+@Component
 @Getter
 @Builder
 public class Mission {

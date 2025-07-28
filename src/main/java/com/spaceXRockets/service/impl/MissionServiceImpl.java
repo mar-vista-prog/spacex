@@ -1,18 +1,25 @@
 package com.spaceXRockets.service.impl;
 
+import com.spaceXRockets.enums.RocketStatus;
 import com.spaceXRockets.model.*;
 import com.spaceXRockets.repository.MissionRepository;
+import com.spaceXRockets.enums.MissionStatus;
 import com.spaceXRockets.repository.RocketRepository;
 import com.spaceXRockets.service.MissionService;
 import com.spaceXRockets.service.MissionStatusUpdater;
 import com.spaceXRockets.service.formatter.MissionFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class MissionServiceImpl implements MissionService {
 
+    @Autowired
     private final MissionRepository missionRepository;
+    @Autowired
     private final RocketRepository rocketRepository;
     private final MissionStatusUpdater missionStatusUpdater;
 

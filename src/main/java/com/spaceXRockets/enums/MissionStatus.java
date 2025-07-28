@@ -1,4 +1,4 @@
-package com.spaceXRockets.model;
+package com.spaceXRockets.enums;
 
 public enum MissionStatus {
     Scheduled,

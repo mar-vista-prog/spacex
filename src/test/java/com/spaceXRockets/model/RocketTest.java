@@ -1,5 +1,6 @@
 package com.spaceXRockets.model;
 
+import com.spaceXRockets.enums.RocketStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

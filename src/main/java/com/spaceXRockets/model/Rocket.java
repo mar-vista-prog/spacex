@@ -1,5 +1,6 @@
 package com.spaceXRockets.model;
 
+import com.spaceXRockets.enums.RocketStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
